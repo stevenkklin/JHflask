@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>移动端网页</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .text-area {
+            width: 80%;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: none;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+
+        .cancel-button {
+            background-color: #ccc;
+            color: #fff;
+        }
+
+        .send-button {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .response-area {
+            width: 80%;
+            padding: 10px;
+            margin-top: 30px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: vertical;
+            overflow: auto;
+        }
+    </style>
+
+    <script>
+        window.onload = function () {
+            var textArea = document.querySelector('.text-area');
+            var cancelButton = document.querySelector('.cancel-button');
+            var sendButton = document.querySelector('.send-button');
+            var responseArea = document.querySelector('.response-area');
+
+            cancelButton.addEventListener('click', function () {
+                textArea.value = '';
+                responseArea.value = '';
+                responseArea.style.height = '';
+            });
+
+            sendButton.addEventListener('click', function () {
+                var content = textArea.value;
+                responseArea.value = '';
+
+                responseArea.style.height = '';
+
+                // 判断textArea.value = ''， 如果为空，就不发送请求
+                if (content === '') {
+                    return;
+                }
+
+                // 创建一个新的XHR对象
+                var xhr = new XMLHttpRequest();
+
+                // 监听请求状态改变事件
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === XMLHttpRequest.DONE) {
+                        if (xhr.status === 200) {
+                            // 请求成功
+                            var responseData = JSON.parse(xhr.responseText);
+                            var formattedData = JSON.stringify(responseData, null, 4);
+
+                            var decodedData = decodeURI(formattedData);
+                            var keys = Object.keys(responseData);
+                            var keyValuePairs = [];
+
+                            keys.forEach(function (key) {
+                                var value = responseData[key];
+                                var pair = key + ': ' + value;
+                                keyValuePairs.push(pair);
+                            });
+
+                            var result = keyValuePairs.join('\n');
+
+                            // 清空响应区域的值
+                            responseArea.value = '';
+
+                            responseArea.value = result;
+                            responseArea.style.height = responseArea.scrollHeight + 'px';
+                        } else {
+                            // 请求失败
+                            responseArea.value = '请求失败';
+                            responseArea.style.height = responseArea.scrollHeight + 'px';
+                        }
+                    }
+                };
+
+                // 发送POST请求到指定的后端路由
+                xhr.open('POST', '/result');
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.send(JSON.stringify({ content: content }));
+            });
+
+            responseArea.addEventListener('input', function () {
+                responseArea.style.height = responseArea.scrollHeight + 'px';
+            });
+        };
+    </script>
+
+
+</head>
+
+<body>
+    <div class="container">
+
+        <p>请输入相关信息， 每一条信息需要换行！</p>
+        <textarea class="text-area" placeholder="请输入文本"></textarea>
+        <div class="button-group">
+            <button class="button cancel-button">取消</button>
+            <button class="button send-button">发送</button>
+        </div>
+        <textarea class="response-area" readonly></textarea>
+    </div>
+</body>
+
+</html>
